@@ -5,6 +5,7 @@ require 'oauth'
 require 'oauth/client/em_http'
 require 'json'
 
+require 'customlogger/customlogger'
 require 'retriever/twitter'
 require 'retriever/oauth'
 

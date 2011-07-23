@@ -1,6 +1,7 @@
 module Retriever
   class Twitter
-    attr_reader :rate_status
+    include CustomLogger
+    attr_reader :rate_status, :id_for_parsing, :users_data
     # init twitter user and set acces_token, consumer
     # pentru care se vor prelua informatiile
     def initialize(tw_user,atc)
@@ -22,7 +23,7 @@ module Retriever
     def lookup_users_id
       # get 99 user ids
       p "Toti: #{@id_for_parsing.length}"
-      users = @id_for_parsing.pop(1)
+      users = @id_for_parsing.pop(99)
       
       site = "#{@site}/1/users/lookup.json?user_id=#{users.join(",")}"
       p site
@@ -33,10 +34,22 @@ module Retriever
       req.callback {
         p 'A terminat'
         data = JSON.parse(req.response)
-        p req.response
+        
+        data.each do |user|
+          buff = {
+                  :id => user['id'],  
+                  :screen_name => user['screen_name'],
+                  :statuses_count => user['statuses_count'],
+                  :friends_count => user['friends_count']
+                 }
+          @users_data << buff
+        end
+        EM.stop
       }
       req.errback {
         p 'ERR'
+        p req.error
+        # log_error req.error
         # error
       }
     end
@@ -57,11 +70,17 @@ module Retriever
         @cursor = data['next_cursor']
         @id_for_parsing = @id_for_parsing | data['ids']
         p @id_for_parsing.length
-        if @no_of_gets < 3
+        if @no_of_gets < 2
           get_followers_ids
           set_rate_status
           @no_of_gets += 1
+        else
+          set_rate_status
+          if @rate_status > 1
+            lookup_users_id
+          end
         end
+        
       }
       req.errback {
         # error
@@ -83,7 +102,10 @@ module Retriever
         data = JSON.parse(req.response)
         @id_for_parsing = @id_for_parsing | data['ids']
         p @id_for_parsing.length
-        lookup_users_id
+        set_rate_status
+        if @rate_status > 1
+          lookup_users_id
+        end
       }
       req.errback {
         # error

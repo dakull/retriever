@@ -13,14 +13,24 @@ oauth_options = {
                 }
 
 atc = Retriever::OAuthClient.new oauth_options
-twitter_api = Retriever::Twitter.new 'aplusk', atc
+twitter_api_client = Retriever::Twitter.new 'aplusk', atc
 
 # EM
 EM.run {
-  twitter_api.set_rate_status
-  twitter_api.get_friends_ids
+  twitter_api_client.set_rate_status
+  twitter_api_client.get_friends_ids
   #twitter_api.get_followers_ids
   #twitter_api.set_rate_status
-  #EM.stop
 }
+
+
+sorted = twitter_api_client.users_data.sort_by { |item| item[:statuses_count] }.reverse
+
+sorted.each do |user| 
+  puts "No. of followers: #{user[:statuses_count]} | No. of friends: #{user[:friends_count]} | User name: #{user[:screen_name]}"
+end
+
+
+
+
 
