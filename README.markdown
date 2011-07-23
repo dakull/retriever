@@ -7,7 +7,7 @@ Construieste o lista cu cei mai activi (deci cu cele mai multe tweeturi) followe
 ...
 
 ## Foloseste:
-* 
-* 
-* 
-* 
+* OAuth
+* eventmachine
+* em-http-oauth-request
+* Twitter API
