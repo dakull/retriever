@@ -2,7 +2,7 @@ $LOAD_PATH << File.dirname(__FILE__) unless $LOAD_PATH.include?(File.dirname(__F
 
 require 'rubygems'
 require 'oauth'
-require 'em-http-oauth-request'
+require 'oauth/client/em_http'
 require 'json'
 
 require 'retriever/twitter'

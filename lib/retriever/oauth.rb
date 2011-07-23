@@ -8,11 +8,12 @@
 #
 module Retriever
   class OAuthClient
-    attr_reader :consumer, :access_token
+    attr_reader :consumer, :access_token, :site
     # init optiunile 
     # TODO verificat daca sunt ok
     def initialize(options={})
       @options = options
+      @site = @options[:site]
       gen_access_token
     end
     
