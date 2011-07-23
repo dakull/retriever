@@ -24,12 +24,32 @@ EventMachine.run {
   }
   
   # make request 02
-  req2 = EventMachine::HttpRequest.new('http://api.twitter.com/1/account/rate_limit_status.json').get
-  oauth_helper = OAuth::Client::Helper.new(req2, oauth_params)
+  req2 = EventMachine::HttpRequest.new('http://api.twitter.com/1/followers/ids.json?stringify_ids=true&screen_name=dakull').get
+  oauth_helper = OAuth::Client::Helper.new(req, oauth_params)
+
 
   req2.options[:head] = (req2.options[:head] || {}).merge!({"Authorization" => oauth_helper.header})
   req2.callback {
     p req2.response
+    #EventMachine.stop
+  }  
+  
+  # make request 03
+  req3 = EventMachine::HttpRequest.new('http://api.twitter.com/1/account/rate_limit_status.json').get
+  oauth_helper = OAuth::Client::Helper.new(req3, oauth_params)
+
+
+  req3.options[:head] = (req.options[:head] || {}).merge!({"Authorization" => oauth_helper.header})
+  req3.callback {
+    p req3.response
+    #EventMachine.stop
+  }  
+  
+  # make request 04
+  req4 = EventMachine::HttpRequest.new('http://api.twitter.com/1/account/rate_limit_status.json').get
+
+  req4.callback {
+    p req4.response
     EventMachine.stop
   }  
 }

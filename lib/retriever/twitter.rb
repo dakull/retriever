@@ -1,3 +1,5 @@
+require 'oauth/client/em_http'
+
 module Retriever
   class Twitter
     attr_reader :rate_status
@@ -12,6 +14,34 @@ module Retriever
       @cursor = -1
       @no_of_gets = 0
     end
+    
+    
+    # get the IDs for every user the specified user is following
+    # GET friends/ids
+    #  - screen_name 
+    #  - cursor
+    #  - stringify_ids
+    def get_followers_ids_fix
+      req = EventMachine::HttpRequest.new("http://api.twitter.com/1/followers/ids.json?stringify_ids=true&screen_name=#{@twiter_user}&cursor=#{@cursor}").get(:head => {"Content-Type" => "application/x-www-form-urlencoded"}, 
+                                      :timeout => -1) do |client|
+        @consumer.sign!(client, @access_token)
+      end
+      
+      req.callback {
+        data = JSON.parse(req.response)
+        @cursor = data['next_cursor']
+        @id_for_parsing = @id_for_parsing | data['ids']
+        p @id_for_parsing.length
+        if @no_of_gets < 3
+          get_followers_ids
+          set_rate_status
+          @no_of_gets += 1
+        end
+      }
+      req.errback {
+        # error
+      }
+    end      
     
     
     # get the IDs for every user the specified user is following

@@ -19,8 +19,8 @@ twitter_api = Retriever::Twitter.new 'aplusk', atc.access_token, atc.consumer
 EM.run {
   twitter_api.set_rate_status
   twitter_api.get_friends_ids
-  twitter_api.get_followers_ids
-  twitter_api.get_followers_ids
+  twitter_api.get_followers_ids_fix
+  twitter_api.set_rate_status
   #EM.stop
 }
 
