@@ -17,6 +17,13 @@ module Retriever
       gen_access_token
     end
     
+    # make request
+    def make_request(site)
+      EventMachine::HttpRequest.new(site).get(:head => {"Content-Type" => "application/x-www-form-urlencoded"} , :timeout => -1) do |client|
+        @consumer.sign!(client, @access_token)
+      end
+    end
+    
     private
     # return acces_token
     def gen_access_token

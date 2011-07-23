@@ -6,12 +6,10 @@ module Retriever
     # pentru care se vor prelua informatiile
     def initialize(tw_user,atc)
       @twiter_user = tw_user
-      @access_token = atc.access_token 
-      @consumer = atc.consumer
-      @site = atc.site
-      @rate_status = 0
+      @oauth_client = atc
       @id_for_parsing = []
-      @users_data = []
+      @users_data = []      
+      @rate_status = 0
       @cursor = -1
       @no_of_gets = 0
     end
@@ -25,16 +23,13 @@ module Retriever
       p "Toti: #{@id_for_parsing.length}"
       users = @id_for_parsing.pop(99)
       
-      site = "#{@site}/1/users/lookup.json?user_id=#{users.join(",")}"
+      site = "#{@oauth_client.site}/1/users/lookup.json?user_id=#{users.join(",")}"
       p site
-      req = EventMachine::HttpRequest.new(site).get(:head => {"Content-Type" => "application/x-www-form-urlencoded"} , :timeout => -1) do |client|
-        @consumer.sign!(client, @access_token)
-      end
+      req = @oauth_client.make_request site
       
       req.callback {
-        p 'A terminat'
         data = JSON.parse(req.response)
-        
+        # pentru manipulare mai simpla
         data.each do |user|
           buff = {
                   :id => user['id'],  
@@ -44,13 +39,16 @@ module Retriever
                  }
           @users_data << buff
         end
-        EM.stop
+        # face pentru urmatorii
+        set_rate_status
+        if @rate_status > 1 && @id_for_parsing.length > 1
+          lookup_users_id
+        else
+          EM.stop
+        end
       }
       req.errback {
-        p 'ERR'
-        p req.error
-        # log_error req.error
-        # error
+        log_error req.error
       }
     end
     
@@ -60,10 +58,8 @@ module Retriever
     #  - cursor
     #  - stringify_ids
     def get_followers_ids
-      site = "#{@site}/1/followers/ids.json?stringify_ids=true&screen_name=#{@twiter_user}&cursor=#{@cursor}"
-      req = EventMachine::HttpRequest.new(site).get(:head => {"Content-Type" => "application/x-www-form-urlencoded"} , :timeout => -1) do |client|
-        @consumer.sign!(client, @access_token)
-      end
+      site = "#{@oauth_client.site}/1/followers/ids.json?stringify_ids=true&screen_name=#{@twiter_user}&cursor=#{@cursor}"
+      req = @oauth_client.make_request site
       
       req.callback {
         data = JSON.parse(req.response)
@@ -79,11 +75,10 @@ module Retriever
           if @rate_status > 1
             lookup_users_id
           end
-        end
-        
+        end  
       }
       req.errback {
-        # error
+        log_error req.error
       }
     end      
         
@@ -93,32 +88,28 @@ module Retriever
     #  - cursor
     #  - stringify_ids
     def get_friends_ids
-      site = "#{@site}/1/friends/ids.json?screen_name=#{@twiter_user}&cursor=-1"
-      req = EventMachine::HttpRequest.new(site).get(:head => {"Content-Type" => "application/x-www-form-urlencoded"}, :timeout => -1) do |client|
-        @consumer.sign!(client, @access_token)
-      end
+      site = "#{@oauth_client.site}/1/friends/ids.json?screen_name=#{@twiter_user}&cursor=-1"
+      req = @oauth_client.make_request site
 
       req.callback {
         data = JSON.parse(req.response)
         @id_for_parsing = @id_for_parsing | data['ids']
-        p @id_for_parsing.length
+
         set_rate_status
         if @rate_status > 1
           lookup_users_id
         end
       }
       req.errback {
-        # error
+        log_error req.error
       }
     end
     
     # set rate no
     # GET rate_limit_status
     def set_rate_status
-      site = "#{@site}/1/account/rate_limit_status.json"
-      req = EventMachine::HttpRequest.new(site).get(:head => {"Content-Type" => "application/x-www-form-urlencoded"}, :timeout => -1) do |client|
-        @consumer.sign!(client, @access_token)
-      end
+      site = "#{@oauth_client.site}/1/account/rate_limit_status.json"
+      req = @oauth_client.make_request site
       
       req.callback {
         data = JSON.parse(req.response)
@@ -126,7 +117,7 @@ module Retriever
         p "Ramaining: #{@rate_status}"
       }
       req.errback {
-        # error
+        log_error req.error
       }      
     end    
   end

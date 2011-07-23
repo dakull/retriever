@@ -4,6 +4,7 @@ require 'rubygems'
 require 'oauth'
 require 'oauth/client/em_http'
 require 'json'
+require  'yaml'
 
 require 'customlogger/customlogger'
 require 'retriever/twitter'
